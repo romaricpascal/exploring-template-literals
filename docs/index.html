@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>Tinkering with template literals</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+      <ul id="jump_to">
+        <li>
+          <a class="large" href="javascript:void(0);">Jump To &hellip;</a>
+          <a class="small" href="javascript:void(0);">+</a>
+          <div id="jump_wrapper">
+          <div id="jump_page_wrapper">
+            <div id="jump_page">
+              
+                
+                <a class="source" href="extradata.html">
+                  extradata.js
+                </a>
+              
+                
+                <a class="source" href="index.html">
+                  index.js
+                </a>
+              
+                
+                <a class="source" href="template.html">
+                  template.js
+                </a>
+              
+            </div>
+          </div>
+        </li>
+      </ul>
+    
+    <ul class="sections">
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              <h1 id="tinkering-with-template-literals">Tinkering with template literals</h1>
+<p>An experiment to explore how much native template literals
+get you as templates, and how to add the missing niceties</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <h2 id="template-literal">Template literal?</h2>
+<p>Let’s say we have some data</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">const</span> data = {
+  <span class="hljs-attr">name</span>: <span class="hljs-string">'Romaric'</span>,
+  <span class="hljs-attr">mood</span>: <span class="hljs-string">'curious'</span>
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>And now we want to output that data in a string
+that says: {name} is {mood}
+The string is simple enough that we could concatenate</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-built_in">console</span>.log(<span class="hljs-string">'concat'</span>, data.name + <span class="hljs-string">' is '</span> + data.mood);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>ES6 introduced template literals, which are a bit nicer
+Especially if the string was to become more complex, with more data inserted</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-built_in">console</span>.log(<span class="hljs-string">'template lit.'</span>, <span class="hljs-string">`<span class="hljs-subst">${data.name}</span> is <span class="hljs-subst">${data.mood}</span>`</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <h2 id="a-first-template-function">A first template function</h2>
+<p>So far so good. Now let’s say we want to handle different data objects
+We can wrap that in a function. A little destructuring in the arguments
+even makes the template nicer to read</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">simpleTemplateLit</span>(<span class="hljs-params">obj</span>) </span>{
+  <span class="hljs-keyword">with</span> (obj) {
+    <span class="hljs-keyword">return</span> <span class="hljs-string">`<span class="hljs-subst">${name}</span> is <span class="hljs-subst">${mood}</span>`</span>;
+  }
+}
+
+<span class="hljs-built_in">console</span>.log(<span class="hljs-string">'template lit. fun'</span>, simpleTemplateLit(data));</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <h2 id="tagged-template-literals">Tagged template literals</h2>
+<p>Neat! Now it’s all nice, but all we can do is insert the data within the string.
+Which means each bit of the data has to be prepared to be inserted in the string.
+Would be great if we could process that data a bit, regardless of the shape of the template
+before it gets within the string</p>
+<p>Template litterals come with a nice addition: tagged template litterals
+You can prepend the template literal with the name of a function, like so.</p>
+<pre><code>basicTaggedTemplate<span class="hljs-string">`<span class="hljs-subst">${name}</span> is <span class="hljs-subst">${mood}</span>`</span></code></pre><p>That function will receive a breakdown of the template:</p>
+<ul>
+<li>an Array of all the string parts as first arguments</li>
+<li>all the variable parts of the templates as subserquent arguments (thankfully there’s destructuring to grab them all)</li>
+</ul>
+<p>Let’s just reassemble the pieces for that first implementation</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">basicTag</span>(<span class="hljs-params">parts, ...values</span>) </span>{
+  <span class="hljs-keyword">let</span> result = parts[<span class="hljs-number">0</span>];
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">1</span>; i &lt; parts.length; i++) {
+    result += values[i - <span class="hljs-number">1</span>];
+    result += parts[i];
+  }
+  <span class="hljs-keyword">return</span> result;
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">basicTagTemplate</span>(<span class="hljs-params">data</span>) </span>{
+  <span class="hljs-keyword">with</span> (data) {
+    <span class="hljs-keyword">return</span> basicTag<span class="hljs-string">`<span class="hljs-subst">${data.name}</span> is <span class="hljs-subst">${data.mood}</span>`</span>;
+  }
+}
+
+<span class="hljs-built_in">console</span>.log(<span class="hljs-string">'basic tagged template'</span>, basicTagTemplate(data));</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <h2 id="processing-values-with-tagged-template-literals">Processing values with tagged template literals</h2>
+<p>Now its all nice, but we were talking about procressing values
+so let’s use</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">const</span> dataWithFunctions = {
+  name() {
+    <span class="hljs-keyword">return</span> <span class="hljs-string">'Romaric'</span>;
+  },
+  mood() {
+    <span class="hljs-keyword">return</span> <span class="hljs-string">'excited'</span>;
+  }
+};
+
+<span class="hljs-built_in">console</span>.log(<span class="hljs-string">'basic tagged template'</span>, basicTagTemplate(dataWithFunctions));</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>Let’s create a little function to process our data</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">processValue</span>(<span class="hljs-params">value</span>) </span>{
+  <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> value === <span class="hljs-string">'function'</span>) {
+    <span class="hljs-keyword">return</span> value() || <span class="hljs-string">''</span>;
+  } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-built_in">Array</span>.isArray(value)) {
+    <span class="hljs-keyword">return</span> <span class="hljs-built_in">Array</span>.join(<span class="hljs-string">''</span>) || <span class="hljs-string">''</span>;
+  } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> value === <span class="hljs-string">'object'</span>) {
+    <span class="hljs-keyword">return</span> <span class="hljs-built_in">JSON</span>.stringify(value) || <span class="hljs-string">''</span>;
+  } <span class="hljs-keyword">else</span> {
+    <span class="hljs-keyword">return</span> value || <span class="hljs-string">''</span>;
+  }
+}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>Now we can create tags that will process their values</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">processTag</span>(<span class="hljs-params">processor</span>) </span>{
+  <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">parts, ...values</span>) </span>{
+    <span class="hljs-keyword">let</span> result = parts[<span class="hljs-number">0</span>];
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">1</span>; i &lt; parts.length; i++) {
+      result += processor(values[i - <span class="hljs-number">1</span>]);
+      result += parts[i];
+    }
+    <span class="hljs-keyword">return</span> result;
+  };
+}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>Assemble both to create the actual processor</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">const</span> processor = processTag(processValue);
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">processTagTemplate</span>(<span class="hljs-params">data</span>) </span>{
+  <span class="hljs-keyword">with</span> (data) {
+    <span class="hljs-keyword">return</span> processor<span class="hljs-string">`<span class="hljs-subst">${data.name}</span> is <span class="hljs-subst">${data.mood}</span>`</span>;
+  }
+}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>And we’re back on our feet</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-built_in">console</span>.log(<span class="hljs-string">'process tag template'</span>, processTagTemplate(data));</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <p>Processor is a bit of a long name, let’s go with something shorter
+like t for template</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-keyword">const</span> t = processTag(processValue);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p>There we go, we can have functions withing template literals
+this allows us to use <code>if</code> statements, which we could not do
+before, for example</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>const string = t`&lt;h1&gt;${() =&gt; {
+  if (data.mood == 'happy') {
+    return `yeah!`;
+  } else {
+    return `oh no :'(`;
+  }
+}}&lt;/h1&gt;`;
+
+console.log(string);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+              <p>We can even have the function returning its own tagged template
+literal</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>data.mood = <span class="hljs-string">'happy'</span>;
+<span class="hljs-keyword">const</span> string2 = t<span class="hljs-string">`&lt;header&gt;<span class="hljs-subst">${() =&gt; {
+  <span class="hljs-keyword">if</span> (data.mood == <span class="hljs-string">'curious'</span>) {
+    <span class="hljs-keyword">return</span> t<span class="hljs-string">`&lt;h1&gt;<span class="hljs-subst">${() =&gt; <span class="hljs-string">'Not in the data'</span>}</span>&lt;/h1&gt;`</span>;
+  }</span>
+}}&lt;/header&gt;`</span>;
+<span class="hljs-built_in">console</span>.log(string2);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-15">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+              <p>Now like before, let’s wrap in in a template function
+so we can pass any kind of data</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">template</span>(<span class="hljs-params">data</span>) </span>{
+  <span class="hljs-keyword">with</span> (data) {
+    <span class="hljs-keyword">return</span> t<span class="hljs-string">`&lt;header&gt;<span class="hljs-subst">${() =&gt; {
+      <span class="hljs-keyword">if</span> (mood == <span class="hljs-string">'curious'</span>) {
+        <span class="hljs-keyword">return</span> t<span class="hljs-string">`&lt;h1&gt;<span class="hljs-subst">${() =&gt; name}</span>&lt;/h1&gt;`</span>;
+      }</span>
+    }}&lt;/header&gt;`</span>;
+  }
+}
+
+<span class="hljs-built_in">console</span>.log(template({ <span class="hljs-attr">name</span>: <span class="hljs-string">'Romaric'</span>, <span class="hljs-attr">mood</span>: <span class="hljs-string">'curious'</span> }));</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-16">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-16">&#182;</a>
+              </div>
+              <h2 id="generating-the-boilerplate-parts">Generating the boilerplate parts</h2>
+<p>It’s a bit tedious to wrap each template in its own function that exposes,
+the arguments. It’s also cumbersome to tag each template literal ourselves.
+So let’s try and get a computer to do the job for us.
+We’ll extract the code of the template in <a href="template">a separate file</a>, read it from the disc
+and use Babel transforms to reshape the code to our needs.</p>
+<blockquote>
+<p>Props to the <a href="https://github.com/jamiebuilds/babel-handbook/blob/master/translations/en/plugin-handbook.md">babel-handbook</a>
+and <a href="https://babeljs.io/docs/en/babel-core">Babel documentation</a> which made this super painless</p>
+</blockquote>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-17">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-17">&#182;</a>
+              </div>
+              <p>These are the transforms we’re going to need
+First we’ll need to tag each template literal with the tag of our chosing
+It will turn <code>template</code> into `tagname``template```</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">transformTTL</span>(<span class="hljs-params">tagName</span>) </span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-18">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-18">&#182;</a>
+              </div>
+              <p>Creates the actual transform with our chosen tagname</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">{ types: t }</span>) </span>{
+    <span class="hljs-keyword">return</span> {
+      <span class="hljs-attr">visitor</span>: {
+        TemplateLiteral(path) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-19">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-19">&#182;</a>
+              </div>
+              <p>Avoid tagging template literals that are already tagged</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span> (path.parent.type !== <span class="hljs-string">'TaggedTemplateExpression'</span>) {
+            path.replaceWith(
+              t.taggedTemplateExpression(t.identifier(tagName), path.node)
+            );
+          }
+        }
+      }
+    };
+  };
+}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-20">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-20">&#182;</a>
+              </div>
+              <p>This second transform allows to mark the actual template part
+to be prefixed by a <code>return</code> so the generated function
+actually returns somethins.
+TODO:</p>
+<ul>
+<li>Automatically return last statement</li>
+<li>Allow the template to not be the last statement and append a return</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">transformLabelToReturn</span>(<span class="hljs-params">labelName = <span class="hljs-string">'template'</span></span>) </span>{
+  <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">{ types: t }</span>) </span>{
+    <span class="hljs-keyword">return</span> {
+      <span class="hljs-attr">visitor</span>: {
+        LabeledStatement(path) {
+          <span class="hljs-built_in">console</span>.log(path.node.label.name);
+          <span class="hljs-keyword">if</span> (path.node.label.name === labelName) {
+            path.replaceWith(t.returnStatement(path.node.body.expression));
+          }
+        }
+      }
+    };
+  };
+}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-21">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-21">&#182;</a>
+              </div>
+              <p>So let’s create our function that’ll accept the path to a file
+And return a function that accepts some data</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">fromFile</span>(<span class="hljs-params">templatePath</span>) </span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-22">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-22">&#182;</a>
+              </div>
+              <p>We’ll need to read the file</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">const</span> fs = <span class="hljs-built_in">require</span>(<span class="hljs-string">'fs'</span>);
+  <span class="hljs-keyword">const</span> content = fs.readFileSync(templatePath, <span class="hljs-string">'utf-8'</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-23">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-23">&#182;</a>
+              </div>
+              <p>Now we can run the babel transforms to automatically tag
+our template literals with our chosen function</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">const</span> { transformSync } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'@babel/core'</span>);
+  <span class="hljs-keyword">const</span> TAG_NAME = <span class="hljs-string">'t'</span>;
+  <span class="hljs-keyword">const</span> result = transformSync(content, {
+    <span class="hljs-attr">plugins</span>: [</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-24">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-24">&#182;</a>
+              </div>
+              <p>The transform tagging all the template literals</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      transformTTL(TAG_NAME),</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-25">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-25">&#182;</a>
+              </div>
+              <p>A second transform to allow running an arbitrary bit
+of JavaScript before the template literal and mark it
+to be returned</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      transformLabelToReturn(<span class="hljs-string">'template'</span>)
+    ]
+  });</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-26">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-26">&#182;</a>
+              </div>
+              <p>Now we can create the body of our function, that will take
+a <code>context</code> Object parameter, expose all its keys as variables
+thanks to <code>with</code> and then run it.
+TODO: Maybe use a babel transform for that bit too,
+      there might be some subtleties around sourcemaps there</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">const</span> ARGUMENT_NAME = <span class="hljs-string">'context'</span>;
+  <span class="hljs-keyword">const</span> body = <span class="hljs-string">`with(<span class="hljs-subst">${ARGUMENT_NAME}</span>) {
+    <span class="hljs-subst">${result.code}</span>
+  }`</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-27">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-27">&#182;</a>
+              </div>
+              <p>Finally we can create the function that will do the rendering</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Function</span>(ARGUMENT_NAME, body);
+}
+data.mood = <span class="hljs-string">'curious'</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-28">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-28">&#182;</a>
+              </div>
+              <p>And call it :D</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">const</span> { resolve } = <span class="hljs-built_in">require</span>(<span class="hljs-string">'path'</span>);
+<span class="hljs-keyword">const</span> FILE_PATH = resolve(__dirname, <span class="hljs-string">'template.js'</span>);
+<span class="hljs-built_in">console</span>.log(fromFile(FILE_PATH)({ ...data, t, <span class="hljs-built_in">require</span> }));</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-29">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-29">&#182;</a>
+              </div>
+              <p>TODO:</p>
+<ul>
+<li>prevent ${a=5} to output 5</li>
+<li>automatically generate loops to transform:<pre><code><span class="hljs-keyword">for</span>(<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">5</span>; i++) {
+  <span class="hljs-string">`&lt;li&gt;<span class="hljs-subst">${i}</span>&lt;/li&gt;`</span>
+}</code></pre>to<pre><code><span class="hljs-keyword">let</span> _result = <span class="hljs-string">''</span>;
+<span class="hljs-keyword">for</span>(<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">5</span>; i++) {
+  _result += <span class="hljs-string">`&lt;li&gt;<span class="hljs-subst">${i}</span>&lt;/li&gt;`</span>
+}
+<span class="hljs-keyword">return</span> _result;</code></pre>Expand same for while loops
+Allow customization of which bit gets appended to the result with a label</li>
+<li>JSX to template literal converter to get nicer templates</li>
+<li>Automatically return the last statement of the template (if there’s no return yet)</li>
+<li>Automatically return template literals inside if statements?</li>
+</ul>
+
+            </div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

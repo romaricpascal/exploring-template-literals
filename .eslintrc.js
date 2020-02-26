@@ -4,6 +4,12 @@ module.exports = {
     "plugin:node/recommended",
     "plugin:prettier/recommended"
   ],
+  "rules": {
+    // We use labels for our own purposes here
+    "no-unused-labels": 0,
+    "no-undef": 0,
+    "no-with": 0
+  },
   "overrides": [
     {
       "files": [
